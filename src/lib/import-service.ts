@@ -96,12 +96,9 @@ export function planImport(rows: ImportRow[], existing: Series[]): ImportPlan {
     else {
       const changed = FIELDS.some((f) => {
         if (f === "titulo" || f === "fuente") return false;
-        const a = row[f] as unknown, b = (ex as any)[f];
-        return (a ?? null) !== null && String(a) !== String(b ?? "")
-          ? true
-          : a == null && b != null
-            ? false
-            : false;
+        const a = row[f] as unknown;
+        const b = (ex as unknown as Record<string, unknown>)[f];
+        return a != null && String(a) !== String(b ?? "");
       });
       if (changed) plan.actualizadas.push({ row, existing: ex });
       else plan.sinCambios++;
