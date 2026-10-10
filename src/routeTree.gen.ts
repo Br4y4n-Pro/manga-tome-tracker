@@ -13,6 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedBibliotecaRouteImport } from './routes/_authenticated/biblioteca'
+import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
+import { Route as AuthenticatedSemanaRouteImport } from './routes/_authenticated/semana'
+import { Route as AuthenticatedSerieIdRouteImport } from './routes/_authenticated/serie.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -33,16 +36,37 @@ const AuthenticatedBibliotecaRoute = AuthenticatedBibliotecaRouteImport.update({
   path: '/biblioteca',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
+  id: '/importar',
+  path: '/importar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSemanaRoute = AuthenticatedSemanaRouteImport.update({
+  id: '/semana',
+  path: '/semana',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSerieIdRoute = AuthenticatedSerieIdRouteImport.update({
+  id: '/serie/$id',
+  path: '/serie/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/importar': typeof AuthenticatedImportarRoute
+  '/semana': typeof AuthenticatedSemanaRoute
+  '/serie/$id': typeof AuthenticatedSerieIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/importar': typeof AuthenticatedImportarRoute
+  '/semana': typeof AuthenticatedSemanaRoute
+  '/serie/$id': typeof AuthenticatedSerieIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,18 +74,25 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/biblioteca': typeof AuthenticatedBibliotecaRoute
+  '/_authenticated/importar': typeof AuthenticatedImportarRoute
+  '/_authenticated/semana': typeof AuthenticatedSemanaRoute
+  '/_authenticated/serie/$id': typeof AuthenticatedSerieIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/biblioteca'
+  fullPaths:
+    '/' | '/auth' | '/biblioteca' | '/importar' | '/semana' | '/serie/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/biblioteca'
+  to: '/' | '/auth' | '/biblioteca' | '/importar' | '/semana' | '/serie/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/biblioteca'
+    | '/_authenticated/importar'
+    | '/_authenticated/semana'
+    | '/_authenticated/serie/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,15 +131,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBibliotecaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/importar': {
+      id: '/_authenticated/importar'
+      path: '/importar'
+      fullPath: '/importar'
+      preLoaderRoute: typeof AuthenticatedImportarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/semana': {
+      id: '/_authenticated/semana'
+      path: '/semana'
+      fullPath: '/semana'
+      preLoaderRoute: typeof AuthenticatedSemanaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/serie/$id': {
+      id: '/_authenticated/serie/$id'
+      path: '/serie/$id'
+      fullPath: '/serie/$id'
+      preLoaderRoute: typeof AuthenticatedSerieIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBibliotecaRoute: typeof AuthenticatedBibliotecaRoute
+  AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
+  AuthenticatedSemanaRoute: typeof AuthenticatedSemanaRoute
+  AuthenticatedSerieIdRoute: typeof AuthenticatedSerieIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBibliotecaRoute: AuthenticatedBibliotecaRoute,
+  AuthenticatedImportarRoute: AuthenticatedImportarRoute,
+  AuthenticatedSemanaRoute: AuthenticatedSemanaRoute,
+  AuthenticatedSerieIdRoute: AuthenticatedSerieIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
