@@ -16,7 +16,7 @@ export function startOfDay(d: Date) {
 }
 export function parseLocalDate(s: string) {
   const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, m - 1, d);
+  return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
 }
 export function toISODate(d: Date) {
   const p = (n: number) => String(n).padStart(2, "0");

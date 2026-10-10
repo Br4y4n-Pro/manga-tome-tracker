@@ -72,7 +72,7 @@ function Library() {
   useEffect(() => {
     const el = sentinel.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && setLimit((l) => l + PAGE), { rootMargin: "800px" });
+    const io = new IntersectionObserver(([e]) => e?.isIntersecting && setLimit((l) => l + PAGE), { rootMargin: "800px" });
     io.observe(el);
     return () => io.disconnect();
   }, [filtered.length]);
@@ -209,7 +209,7 @@ function AddSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
     setBusy(true);
     const { error } = await supabase.from("series").insert({ titulo: titulo.trim(), tipo, ultimo_cap_leido: Number(cap) || 0, last_read_at: new Date().toISOString() });
     setBusy(false);
-    if (error) return toast.error(error.code === "23505" ? "Esa serie ya existe" : "No se pudo agregar");
+    if (error) { toast.error(error.code === "23505" ? "Esa serie ya existe" : "No se pudo agregar"); return; }
     toast.success("Serie agregada");
     qc.invalidateQueries({ queryKey: ["series"] });
     setTitulo(""); setCap("0");

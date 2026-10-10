@@ -16,6 +16,7 @@ export function Cover({ series, className }: { series: Series; className?: strin
     const el = ref.current;
     const io = new IntersectionObserver(
       ([e]) => {
+        if (!e) return;
         if (!e.isIntersecting) return;
         io.disconnect();
         autoFetchCover(series.id, series.titulo).then((url) => {

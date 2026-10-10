@@ -117,7 +117,7 @@ export async function applyImport(plan: ImportPlan, archivo: string) {
         if (f === "titulo" || f === "fuente") continue;
         if (row[f] != null) p[f] = row[f];
       }
-      if (row.ultimo_cap_leido > Number(existing.ultimo_cap_leido)) p.last_read_at = now;
+      if (row.ultimo_cap_leido > Number(existing.ultimo_cap_leido)) p['last_read_at'] = now;
       return p;
     }),
   ];
