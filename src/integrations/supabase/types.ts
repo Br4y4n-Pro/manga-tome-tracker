@@ -14,7 +14,184 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chapter_notes: {
+        Row: {
+          capitulo: number
+          created_at: string
+          id: string
+          nota: string
+          series_id: string
+          user_id: string
+        }
+        Insert: {
+          capitulo: number
+          created_at?: string
+          id?: string
+          nota: string
+          series_id: string
+          user_id?: string
+        }
+        Update: {
+          capitulo?: number
+          created_at?: string
+          id?: string
+          nota?: string
+          series_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_notes_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_logs: {
+        Row: {
+          actualizadas: number
+          archivo: string
+          created_at: string
+          id: string
+          nuevas: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          actualizadas?: number
+          archivo: string
+          created_at?: string
+          id?: string
+          nuevas?: number
+          total?: number
+          user_id?: string
+        }
+        Update: {
+          actualizadas?: number
+          archivo?: string
+          created_at?: string
+          id?: string
+          nuevas?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      release_schedules: {
+        Row: {
+          activo: boolean
+          cada_n_dias: number | null
+          created_at: string
+          dias_semana: number[]
+          fecha_inicio: string
+          id: string
+          series_id: string
+          tipo_regla: string
+          user_id: string
+        }
+        Insert: {
+          activo?: boolean
+          cada_n_dias?: number | null
+          created_at?: string
+          dias_semana?: number[]
+          fecha_inicio?: string
+          id?: string
+          series_id: string
+          tipo_regla: string
+          user_id?: string
+        }
+        Update: {
+          activo?: boolean
+          cada_n_dias?: number | null
+          created_at?: string
+          dias_semana?: number[]
+          fecha_inicio?: string
+          id?: string
+          series_id?: string
+          tipo_regla?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_schedules_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: true
+            referencedRelation: "series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      series: {
+        Row: {
+          caps_leidos: number | null
+          caps_totales: number | null
+          categoria: string | null
+          cover_checked: boolean
+          cover_url: string | null
+          created_at: string
+          estado: string | null
+          fuente: string
+          id: string
+          last_read_at: string | null
+          nota_general: string | null
+          sin_leer: number | null
+          tipo: string
+          titulo: string
+          ultimo_cap_disponible: number | null
+          ultimo_cap_leido: number
+          ultimo_cap_nombre: string | null
+          ultimo_cap_tracker: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          caps_leidos?: number | null
+          caps_totales?: number | null
+          categoria?: string | null
+          cover_checked?: boolean
+          cover_url?: string | null
+          created_at?: string
+          estado?: string | null
+          fuente?: string
+          id?: string
+          last_read_at?: string | null
+          nota_general?: string | null
+          sin_leer?: number | null
+          tipo?: string
+          titulo: string
+          ultimo_cap_disponible?: number | null
+          ultimo_cap_leido?: number
+          ultimo_cap_nombre?: string | null
+          ultimo_cap_tracker?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          caps_leidos?: number | null
+          caps_totales?: number | null
+          categoria?: string | null
+          cover_checked?: boolean
+          cover_url?: string | null
+          created_at?: string
+          estado?: string | null
+          fuente?: string
+          id?: string
+          last_read_at?: string | null
+          nota_general?: string | null
+          sin_leer?: number | null
+          tipo?: string
+          titulo?: string
+          ultimo_cap_disponible?: number | null
+          ultimo_cap_leido?: number
+          ultimo_cap_nombre?: string | null
+          ultimo_cap_tracker?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
