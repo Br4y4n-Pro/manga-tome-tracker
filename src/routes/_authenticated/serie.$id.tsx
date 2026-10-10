@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, ImagePlus, Plus, Save, Sparkles, StickyNote, Trash2 } from "lucide-react";
+import { CalendarDays, ExternalLink, ImagePlus, Info, Link2, Plus, Save, Sparkles, Star, StickyNote, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   chapterNotesQuery,
   formatCap,
   scheduleQuery,
+  unidad,
   seriesQuery,
   type ChapterNote,
   type Schedule,
@@ -20,7 +21,14 @@ import {
   upcomingReleases,
   type ScheduleRule,
 } from "@/lib/schedule";
-import { searchCovers } from "@/lib/covers";
+import {
+  aniListErrorMessage,
+  infoPatch,
+  mediaTypeOf,
+  preferredTitle,
+  searchMedia,
+  type AniListMedia,
+} from "@/lib/anilist";
 import {
   plusOnePatch,
   useDeleteChapterNote,
@@ -66,7 +74,7 @@ function Detail() {
   const s = series?.find((x) => x.id === id);
   const { data: schedule } = useQuery(scheduleQuery(id));
   const { data: notes } = useQuery(chapterNotesQuery(id));
-  const [coverPicker, setCoverPicker] = useState(false);
+  const [linking, setLinking] = useState(false);
   const update = useUpdateSeries();
 
   if (isLoading) {
@@ -97,8 +105,8 @@ function Detail() {
         <div className="relative shrink-0">
           <Cover series={s} className="aspect-[2/3] w-32 rounded-xl" />
           <button
-            aria-label="Cambiar carátula"
-            onClick={() => setCoverPicker(true)}
+            aria-label="Vincular con AniList y cambiar carátula"
+            onClick={() => setLinking(true)}
             className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-primary shadow"
           >
             <ImagePlus className="h-4 w-4" />
@@ -107,11 +115,11 @@ function Detail() {
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold leading-tight">{s.titulo}</h1>
           <p className="mt-1 text-sm capitalize text-muted-foreground">
-            {[s.tipo, s.categoria, s.estado, s.fuente].filter(Boolean).join(" · ")}
+            {[s.tipo, s.estado, s.autor].filter(Boolean).join(" · ")}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Leídos {formatCap(s.caps_leidos)} / {formatCap(s.caps_totales)} · Sin leer{" "}
-            {formatCap(s.sin_leer)}
+            {s.tipo === "anime" ? "Vistos" : "Leídos"} {formatCap(s.caps_leidos)} / {formatCap(s.caps_totales)} ·{" "}
+            {s.tipo === "anime" ? "Pendientes" : "Sin leer"} {formatCap(s.sin_leer)}
           </p>
           <div className="mt-3 flex items-center gap-2">
             <CapInput s={s} />
@@ -127,10 +135,11 @@ function Detail() {
         </div>
       </div>
 
+      <InfoSection s={s} onLink={() => setLinking(true)} />
       <GeneralNote s={s} />
       <ScheduleEditor schedule={schedule} seriesId={s.id} />
       <ChapterNotes notes={notes} seriesId={s.id} />
-      <CoverPicker open={coverPicker} onOpenChange={setCoverPicker} series={s} />
+      <LinkAniListDialog open={linking} onOpenChange={setLinking} series={s} />
     </main>
   );
 }
@@ -393,40 +402,152 @@ function NoteRow({ note, onDelete }: { note: ChapterNote; onDelete: () => void }
   );
 }
 
-function CoverPicker({ open, onOpenChange, series }: { open: boolean; onOpenChange: (v: boolean) => void; series: Series }) {
-  const qc = useQueryClient();
+const fechaCorta = new Intl.DateTimeFormat("es", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+function InfoSection({ s, onLink }: { s: Series; onLink: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const facts = [
+    s.artista && s.artista !== s.autor ? ["Arte", s.artista] : null,
+    s.estado_api ? ["Publicación (AniList)", s.estado_api] : null,
+    s.total_api ? [s.tipo === "anime" ? "Episodios" : "Capítulos", String(s.total_api)] : null,
+    s.fuentes.length ? ["Fuentes", s.fuentes.join(", ")] : null,
+    s.fecha_agregado ? ["En tu biblioteca desde", new Date(s.fecha_agregado).toLocaleDateString("es")] : null,
+  ].filter((f): f is [string, string] => !!f);
+
+  return (
+    <section className="mt-8 space-y-3">
+      <h2 className="flex items-center gap-2 text-lg font-bold">
+        <Info className="h-4 w-4 text-primary" /> Información
+      </h2>
+      {s.categorias.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {s.categorias.map((c) => (
+            <span key={c} className="rounded-full border border-primary/40 px-2 py-0.5 text-[11px] text-primary">
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
+      {s.generos.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {s.generos.map((g) => (
+            <span key={g} className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
+              {g}
+            </span>
+          ))}
+        </div>
+      )}
+      {s.sinopsis && (
+        <div>
+          <p className={cn("whitespace-pre-line text-sm text-muted-foreground", !expanded && "line-clamp-4")}>
+            {s.sinopsis}
+          </p>
+          <button onClick={() => setExpanded(!expanded)} className="mt-1 text-xs font-semibold text-primary">
+            {expanded ? "Ver menos" : "Ver más"}
+          </button>
+        </div>
+      )}
+      {facts.length > 0 && (
+        <dl className="grid grid-cols-2 gap-2 text-xs">
+          {facts.map(([k, v]) => (
+            <div key={k} className="rounded-lg bg-card px-3 py-2">
+              <dt className="text-muted-foreground">{k}</dt>
+              <dd className="font-medium">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {s.proximo_ep && s.proximo_ep_at && (
+        <p className="rounded-lg bg-primary/10 px-3 py-2 text-xs text-primary">
+          <CalendarDays className="mr-1 inline h-3.5 w-3.5" />
+          Episodio {s.proximo_ep}: {fechaCorta.format(new Date(s.proximo_ep_at))}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        {s.puntuacion != null && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-1 text-xs font-bold text-amber-500">
+            <Star className="h-3 w-3" /> {s.puntuacion}%
+          </span>
+        )}
+        {s.anilist_url && (
+          <a
+            href={s.anilist_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-xs"
+          >
+            AniList <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+        <Button size="sm" variant="secondary" onClick={onLink}>
+          <Link2 className="h-3.5 w-3.5" /> {s.anilist_id ? "Corregir obra en AniList" : "Vincular con AniList"}
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+function LinkAniListDialog({
+  open,
+  onOpenChange,
+  series,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  series: Series;
+}) {
   const update = useUpdateSeries();
   const [q, setQ] = useState(series.titulo);
-  const dq = useDebounced(q, 500);
-  const [results, setResults] = useState<Awaited<ReturnType<typeof searchCovers>>>([]);
+  const dq = useDebounced(q, 600);
+  const [results, setResults] = useState<AniListMedia[]>([]);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) return;
-    if (!dq.trim()) {
+    if (!open || !dq.trim()) {
       setResults([]);
       return;
     }
+    let cancelled = false;
     setBusy(true);
-    searchCovers(dq)
-      .then(setResults)
-      .catch(() => setResults([]))
-      .finally(() => setBusy(false));
-  }, [open, dq]);
+    setError(null);
+    searchMedia(dq.trim(), mediaTypeOf(series.tipo))
+      .then((r) => !cancelled && setResults(r))
+      .catch((e) => {
+        if (cancelled) return;
+        setResults([]);
+        setError(aniListErrorMessage(e));
+      })
+      .finally(() => !cancelled && setBusy(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [open, dq, series.tipo]);
 
-  function pick(url: string) {
-    update.mutate({ id: series.id, patch: { cover_url: url, cover_checked: true } });
-    qc.invalidateQueries({ queryKey: ["series"] });
+  function pick(m: AniListMedia) {
+    update.mutate(
+      { id: series.id, patch: infoPatch(m, series, { replaceCover: true }) },
+      { onSuccess: () => toast.success(`Vinculado con “${preferredTitle(m)}”`) },
+    );
     onOpenChange(false);
-    toast.success("Carátula actualizada");
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh]">
+      <DialogContent className="max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Elegir carátula</DialogTitle>
+          <DialogTitle>Elegir la obra en AniList</DialogTitle>
         </DialogHeader>
+        <p className="text-xs text-muted-foreground">
+          Se traen la portada, el total de {series.tipo === "anime" ? "episodios" : "capítulos"}, el estado y la
+          puntuación. Tu título, progreso y sinopsis en español se mantienen.
+        </p>
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en AniList…" className="bg-background" />
         {busy ? (
           <div className="grid grid-cols-3 gap-2">
@@ -434,17 +555,33 @@ function CoverPicker({ open, onOpenChange, series }: { open: boolean; onOpenChan
               <Skeleton key={i} className="aspect-[2/3] w-full rounded-lg" />
             ))}
           </div>
+        ) : error ? (
+          <p className="py-8 text-center text-sm text-destructive">{error}</p>
         ) : results.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            Sin resultados. Prueba con el título original o en inglés.
+            Sin resultados. Prueba con el título original (japonés o coreano) o en inglés.
           </p>
         ) : (
           <div className="grid grid-cols-3 gap-2 overflow-y-auto">
-            {results.map((r) => (
-              <button key={r.id} onClick={() => pick(r.cover)} className="group relative">
-                <img src={r.cover} alt={r.title} className="aspect-[2/3] w-full rounded-lg object-cover" />
-                <span className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/70 p-1 text-left text-[9px] text-white">
-                  {r.title}
+            {results.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => pick(m)}
+                className={cn(
+                  "group relative overflow-hidden rounded-lg text-left",
+                  m.id === series.anilist_id && "ring-2 ring-primary",
+                )}
+              >
+                {m.coverImage?.large ? (
+                  <img src={m.coverImage.large} alt={preferredTitle(m)} className="aspect-[2/3] w-full object-cover" />
+                ) : (
+                  <div className="aspect-[2/3] w-full bg-muted" />
+                )}
+                <span className="absolute inset-x-0 bottom-0 bg-black/75 p-1 text-[9px] leading-tight text-white">
+                  {preferredTitle(m)}
+                  <span className="block opacity-70">
+                    {[m.format?.replace("_", " "), m.startDate?.year, m.countryOfOrigin].filter(Boolean).join(" · ")}
+                  </span>
                 </span>
               </button>
             ))}

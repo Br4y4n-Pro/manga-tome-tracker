@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { seriesQuery, schedulesQuery, TIPOS, formatCap, type Series } from "@/lib/data";
+import { seriesQuery, schedulesQuery, TIPOS, formatCap, unidad, type Series } from "@/lib/data";
+import { normalizeTitle, workKey } from "@/lib/titles";
 import { possibleNewChapter } from "@/lib/schedule";
 import { useUpdateSeries, plusOnePatch } from "@/lib/mutations";
 import { Cover } from "@/components/Cover";
@@ -44,7 +45,7 @@ function Library() {
   const { data: series, isLoading } = useQuery(seriesQuery);
   const { data: schedules } = useQuery(schedulesQuery);
   const [q, setQ] = useState("");
-  const dq = useDebounced(q).trim().toLowerCase();
+  const dq = normalizeTitle(useDebounced(q));
   const [tipo, setTipo] = useState("all");
   const [cat, setCat] = useState("all");
   const [estado, setEstado] = useState("all");
@@ -54,15 +55,15 @@ function Library() {
   const sentinel = useRef<HTMLDivElement>(null);
 
   const schedMap = useMemo(() => new Map((schedules ?? []).map((s) => [s.series_id, s])), [schedules]);
-  const categorias = useMemo(() => [...new Set((series ?? []).map((s) => s.categoria).filter(Boolean) as string[])].sort(), [series]);
+  const categorias = useMemo(() => [...new Set((series ?? []).flatMap((s) => s.categorias))].sort(), [series]);
   const estados = useMemo(() => [...new Set((series ?? []).map((s) => s.estado).filter(Boolean) as string[])].sort(), [series]);
 
   const filtered = useMemo(() => {
     return (series ?? []).filter(
       (s) =>
-        (!dq || s.titulo.toLowerCase().includes(dq)) &&
+        (!dq || normalizeTitle(`${s.titulo} ${s.autor ?? ""}`).includes(dq)) &&
         (tipo === "all" || s.tipo === tipo) &&
-        (cat === "all" || s.categoria === cat) &&
+        (cat === "all" || s.categorias.includes(cat)) &&
         (estado === "all" || s.estado === estado) &&
         (!unread || (s.sin_leer ?? 0) > 0),
     );
@@ -86,7 +87,7 @@ function Library() {
       <div className="sticky top-0 z-30 -mx-4 space-y-2 bg-background/90 px-4 pb-3 pt-1 backdrop-blur-xl">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por título…" className="h-11 rounded-xl bg-card pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por título o autor…" className="h-11 rounded-xl bg-card pl-9" />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
           <Chip active={tipo === "all"} onClick={() => setTipo("all")}>Todo</Chip>
@@ -180,14 +181,16 @@ function SeriesCard({ s, isNew }: { s: Series; isNew: boolean }) {
           </span>
         )}
         <div className="absolute inset-x-1.5 bottom-1.5 flex items-end justify-between gap-1">
-          <span className="text-[11px] font-semibold text-foreground">Cap. {formatCap(s.ultimo_cap_leido)}</span>
-          {s.categoria && <span className="truncate text-[9px] text-muted-foreground">{s.categoria}</span>}
+          <span className="text-[11px] font-semibold text-foreground">
+            {unidad(s.tipo)} {formatCap(s.ultimo_cap_leido)}
+          </span>
+          {s.categorias[0] && <span className="truncate text-[9px] text-muted-foreground">{s.categorias[0]}</span>}
         </div>
       </Link>
       <div className="mt-1.5 flex items-start gap-1">
         <p className="line-clamp-2 flex-1 text-xs font-medium leading-tight">{s.titulo}</p>
         <button
-          aria-label="+1 capítulo"
+          aria-label={s.tipo === "anime" ? "+1 episodio" : "+1 capítulo"}
           onClick={() => update.mutate({ id: s.id, patch: plusOnePatch(s) })}
           className="shrink-0 rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-bold text-primary transition-transform active:scale-90"
         >
@@ -200,12 +203,19 @@ function SeriesCard({ s, isNew }: { s: Series; isNew: boolean }) {
 
 function AddSeriesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const qc = useQueryClient();
+  const { data: series } = useQuery(seriesQuery);
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState<string>("manga");
   const [cap, setCap] = useState("0");
   const [busy, setBusy] = useState(false);
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    const key = workKey(titulo, tipo);
+    const existing = series?.find((s) => workKey(s.titulo, s.tipo) === key);
+    if (existing) {
+      toast.error(`Ya tienes “${existing.titulo}” en tu biblioteca`);
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.from("series").insert({ titulo: titulo.trim(), tipo, ultimo_cap_leido: Number(cap) || 0, last_read_at: new Date().toISOString() });
     setBusy(false);

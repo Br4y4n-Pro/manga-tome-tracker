@@ -102,3 +102,8 @@ export function formatCap(n: number | null | undefined) {
   if (n == null) return "—";
   return Number.isInteger(Number(n)) ? String(Number(n)) : String(n);
 }
+
+/** "Ep." for anime, "Cap." for everything that is read. */
+export function unidad(tipo: string) {
+  return tipo === "anime" ? "Ep." : "Cap.";
+}

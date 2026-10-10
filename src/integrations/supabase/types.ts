@@ -125,20 +125,36 @@ export type Database = {
       }
       series: {
         Row: {
+          anilist_id: number | null
+          anilist_url: string | null
+          artista: string | null
+          autor: string | null
           caps_leidos: number | null
           caps_totales: number | null
           categoria: string | null
+          categorias: string[]
           cover_checked: boolean
           cover_url: string | null
           created_at: string
           estado: string | null
+          estado_api: string | null
+          fecha_agregado: string | null
           fuente: string
+          fuentes: string[]
+          generos: string[]
           id: string
+          info_checked: boolean
           last_read_at: string | null
+          mal_id: number | null
           nota_general: string | null
+          proximo_ep: number | null
+          proximo_ep_at: string | null
+          puntuacion: number | null
           sin_leer: number | null
+          sinopsis: string | null
           tipo: string
           titulo: string
+          total_api: number | null
           ultimo_cap_disponible: number | null
           ultimo_cap_leido: number
           ultimo_cap_nombre: string | null
@@ -147,20 +163,36 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          anilist_id?: number | null
+          anilist_url?: string | null
+          artista?: string | null
+          autor?: string | null
           caps_leidos?: number | null
           caps_totales?: number | null
           categoria?: string | null
+          categorias?: string[]
           cover_checked?: boolean
           cover_url?: string | null
           created_at?: string
           estado?: string | null
+          estado_api?: string | null
+          fecha_agregado?: string | null
           fuente?: string
+          fuentes?: string[]
+          generos?: string[]
           id?: string
+          info_checked?: boolean
           last_read_at?: string | null
+          mal_id?: number | null
           nota_general?: string | null
+          proximo_ep?: number | null
+          proximo_ep_at?: string | null
+          puntuacion?: number | null
           sin_leer?: number | null
+          sinopsis?: string | null
           tipo?: string
           titulo: string
+          total_api?: number | null
           ultimo_cap_disponible?: number | null
           ultimo_cap_leido?: number
           ultimo_cap_nombre?: string | null
@@ -169,20 +201,36 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          anilist_id?: number | null
+          anilist_url?: string | null
+          artista?: string | null
+          autor?: string | null
           caps_leidos?: number | null
           caps_totales?: number | null
           categoria?: string | null
+          categorias?: string[]
           cover_checked?: boolean
           cover_url?: string | null
           created_at?: string
           estado?: string | null
+          estado_api?: string | null
+          fecha_agregado?: string | null
           fuente?: string
+          fuentes?: string[]
+          generos?: string[]
           id?: string
+          info_checked?: boolean
           last_read_at?: string | null
+          mal_id?: number | null
           nota_general?: string | null
+          proximo_ep?: number | null
+          proximo_ep_at?: string | null
+          puntuacion?: number | null
           sin_leer?: number | null
+          sinopsis?: string | null
           tipo?: string
           titulo?: string
+          total_api?: number | null
           ultimo_cap_disponible?: number | null
           ultimo_cap_leido?: number
           ultimo_cap_nombre?: string | null
