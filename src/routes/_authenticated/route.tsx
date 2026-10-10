@@ -1,8 +1,14 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, CalendarDays, Upload } from "lucide-react";
+import { Bell, BellOff, BookOpen, CalendarDays, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lastImportQuery } from "@/lib/data";
+import { importLogsQuery, lastImportQuery, schedulesQuery, seriesQuery } from "@/lib/data";
+import {
+  requestNotificationPermission,
+  useNewChapterNotifications,
+  useNotifPref,
+} from "@/hooks/useNotifications";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -17,6 +23,11 @@ const fmt = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year
 
 function AppLayout() {
   const { data: last } = useQuery(lastImportQuery);
+  const { data: series } = useQuery(seriesQuery);
+  const { data: schedules } = useQuery(schedulesQuery);
+  const [notifEnabled, setNotifEnabled] = useNotifPref();
+  useNewChapterNotifications(series, schedules, notifEnabled);
+
   const nav = [
     { to: "/biblioteca", label: "Biblioteca", icon: BookOpen },
     { to: "/semana", label: "Esta semana", icon: CalendarDays },
@@ -31,6 +42,23 @@ function AppLayout() {
         </div>
       )}
       <Outlet />
+      <button
+        aria-label="Notificaciones"
+        onClick={async () => {
+          if (!notifEnabled) {
+            const ok = await requestNotificationPermission();
+            if (!ok) {
+              toast.error("El navegador bloqueó las notificaciones");
+              return;
+            }
+          }
+          setNotifEnabled(!notifEnabled);
+          toast.success(notifEnabled ? "Notificaciones desactivadas" : "Te avisaremos de capítulos nuevos");
+        }}
+        className="fixed right-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/85 text-muted-foreground backdrop-blur-xl transition-colors"
+      >
+        {notifEnabled ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4" />}
+      </button>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
         <div className="mx-auto grid max-w-lg grid-cols-3">
           {nav.map(({ to, label, icon: Icon }) => (

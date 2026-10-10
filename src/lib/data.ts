@@ -41,6 +41,49 @@ export const schedulesQuery = queryOptions({
   staleTime: 60_000,
 });
 
+export const scheduleQuery = (seriesId: string) =>
+  queryOptions({
+    queryKey: ["schedule", seriesId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("release_schedules")
+        .select("*")
+        .eq("series_id", seriesId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60_000,
+  });
+
+export const chapterNotesQuery = (seriesId: string) =>
+  queryOptions({
+    queryKey: ["chapter-notes", seriesId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("chapter_notes")
+        .select("*")
+        .eq("series_id", seriesId)
+        .order("capitulo", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60_000,
+  });
+
+export const importLogsQuery = queryOptions({
+  queryKey: ["import-logs"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("import_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) throw error;
+    return data;
+  },
+});
+
 export const lastImportQuery = queryOptions({
   queryKey: ["last-import"],
   queryFn: async () => {
