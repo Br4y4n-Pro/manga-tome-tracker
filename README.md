@@ -1,24 +1,37 @@
 # Manga Tome Tracker
 
-Implement exactly the screenshot and nothing else
+Mi Biblioteca Otaku: progreso, notas por capítulo y calendario de salidas de manga, manhwa, manhua y anime.
 
-This project was built with [Lovable](https://lovable.dev).
+Stack: TanStack Start (React 19) + Vite, Tailwind CSS, Supabase (auth y Postgres con RLS).
 
-## Build with Lovable
+## Requisitos
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/9710190a-cb90-4e5c-8fbe-2881b10adaa3).
+- Node.js 22+
+- Un proyecto de [Supabase](https://supabase.com)
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+## Configuración
 
-## Development
+1. Instala dependencias:
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+   ```sh
+   npm install
+   ```
+
+2. Copia `.env.example` a `.env` y completa la URL y la clave **publishable** de tu proyecto de Supabase.
+   Nunca pongas la clave secreta (`sb_secret_…` / `service_role`) en el `.env` del frontend.
+
+3. Crea las tablas: en Supabase → SQL Editor, ejecuta `drizzle/migrations/0000_migration.sql`.
+
+4. En Supabase → Authentication → URL Configuration, agrega la URL de la app
+   (y `http://localhost:8080` para desarrollo) para que funcionen la confirmación de correo
+   y la recuperación de contraseña (`/reset-password`).
+
+## Scripts
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+npm run dev      # servidor de desarrollo en http://localhost:8080
+npm run build    # build de producción
+npm run preview  # sirve el build
+npm test         # tests
+npm run lint     # lint
 ```
