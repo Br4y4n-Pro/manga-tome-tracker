@@ -2,6 +2,7 @@
 // Never touches notes, schedules, tipo, or covers already chosen.
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { Series } from "./data";
 
 export const COLUMNS = {
@@ -109,22 +110,22 @@ export function planImport(rows: ImportRow[], existing: Series[]): ImportPlan {
 
 export async function applyImport(plan: ImportPlan, archivo: string) {
   const now = new Date().toISOString();
-  const payload: Record<string, unknown>[] = [
+  const payload: TablesInsert<"series">[] = [
     ...plan.nuevas.map((r) => ({ ...r })),
     ...plan.actualizadas.map(({ row, existing }) => {
-      const p: Record<string, unknown> = { titulo: existing.titulo, fuente: existing.fuente };
+      const p: TablesInsert<"series"> = { titulo: existing.titulo, fuente: existing.fuente };
       for (const f of FIELDS) {
         if (f === "titulo" || f === "fuente") continue;
-        if (row[f] != null) p[f] = row[f];
+        if (row[f] != null) Object.assign(p, { [f]: row[f] });
       }
-      if (row.ultimo_cap_leido > Number(existing.ultimo_cap_leido)) p['last_read_at'] = now;
+      if (row.ultimo_cap_leido > Number(existing.ultimo_cap_leido)) p.last_read_at = now;
       return p;
     }),
   ];
   for (let i = 0; i < payload.length; i += 200) {
     const { error } = await supabase
       .from("series")
-      .upsert(payload.slice(i, i + 200) as any, {
+      .upsert(payload.slice(i, i + 200), {
         onConflict: "user_id,titulo,fuente",
         defaultToNull: false,
       });

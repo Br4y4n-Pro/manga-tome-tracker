@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, Plus, Sparkles } from "lucide-react";
 import { schedulesQuery, seriesQuery, formatCap, type Schedule, type Series } from "@/lib/data";
 import { isReleaseDay, startOfDay, toISODate } from "@/lib/schedule";

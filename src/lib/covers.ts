@@ -8,6 +8,13 @@ export interface CoverResult {
   format: string | null;
 }
 
+interface AniListMedia {
+  id: number;
+  format: string | null;
+  title: { romaji: string | null; english: string | null };
+  coverImage: { large: string | null } | null;
+}
+
 const QUERY = `query ($s: String) { Page(perPage: 8) { media(search: $s, sort: SEARCH_MATCH) { id format title { romaji english } coverImage { large } } } }`;
 
 const MIN_GAP_MS = 900; // AniList allows ~90 req/min; stay well under
@@ -36,16 +43,13 @@ async function rawSearch(title: string, attempt = 0): Promise<CoverResult[]> {
     }
     throw new Error(`AniList ${res.status}`);
   }
-  const json = await res.json();
-  const media = json?.data?.Page?.media ?? [];
-  return media
-    .filter((m: any) => m?.coverImage?.large)
-    .map((m: any) => ({
-      id: m.id,
-      title: m.title.english || m.title.romaji,
-      cover: m.coverImage.large,
-      format: m.format,
-    }));
+  const json = (await res.json()) as { data?: { Page?: { media?: AniListMedia[] } } };
+  const media = json.data?.Page?.media ?? [];
+  return media.flatMap((m) =>
+    m.coverImage?.large
+      ? [{ id: m.id, title: m.title.english || m.title.romaji || "", cover: m.coverImage.large, format: m.format }]
+      : [],
+  );
 }
 
 /** Queued search: requests run one at a time. */

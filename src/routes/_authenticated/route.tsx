@@ -1,8 +1,8 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, BellOff, BookOpen, CalendarDays, Upload } from "lucide-react";
+import { Bell, BellOff, BookOpen, CalendarDays, LogOut, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { importLogsQuery, lastImportQuery, schedulesQuery, seriesQuery } from "@/lib/data";
+import { lastImportQuery, schedulesQuery, seriesQuery } from "@/lib/data";
 import {
   requestNotificationPermission,
   useNewChapterNotifications,
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/auth" });
+    return { user: data.user };
   },
   component: AppLayout,
 });
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/_authenticated")({
 const fmt = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year: "numeric" });
 
 function AppLayout() {
+  const { user } = Route.useRouteContext();
   const { data: last } = useQuery(lastImportQuery);
   const { data: series } = useQuery(seriesQuery);
   const { data: schedules } = useQuery(schedulesQuery);
@@ -58,6 +60,17 @@ function AppLayout() {
         className="fixed right-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/85 text-muted-foreground backdrop-blur-xl transition-colors"
       >
         {notifEnabled ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4" />}
+      </button>
+      <button
+        aria-label="Cerrar sesión"
+        title={`Sesión: ${user.email ?? "sin correo"} — cerrar sesión`}
+        onClick={async () => {
+          const { error } = await supabase.auth.signOut();
+          if (error) toast.error("No se pudo cerrar sesión");
+        }}
+        className="fixed right-16 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/85 text-muted-foreground backdrop-blur-xl transition-colors hover:text-foreground"
+      >
+        <LogOut className="h-4 w-4" />
       </button>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
         <div className="mx-auto grid max-w-lg grid-cols-3">

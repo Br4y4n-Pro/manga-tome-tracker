@@ -171,8 +171,9 @@ function GeneralNote({ s }: { s: Series }) {
   useEffect(() => {
     if (debounced === saved.current) return;
     saved.current = debounced;
-    update.mutate({ id: s.id, patch: { nota_general: debounced } });
-    toast.success("Nota guardada");
+    update.mutate({ id: s.id, patch: { nota_general: debounced } }, { onSuccess: () => toast.success("Nota guardada") });
+    // Only react to the debounced text: re-running on id changes would save the previous text into the new row.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced]);
 
   return (
@@ -367,6 +368,8 @@ function NoteRow({ note, onDelete }: { note: ChapterNote; onDelete: () => void }
     if (debounced === saved.current || !debounced.trim()) return;
     saved.current = debounced;
     save.mutate({ id: note.id, capitulo: note.capitulo, nota: debounced });
+    // Only react to the debounced text: re-running on id changes would save the previous text into the new row.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced]);
 
   return (
