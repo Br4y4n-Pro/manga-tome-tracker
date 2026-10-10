@@ -11,7 +11,16 @@ export default defineConfig({
     tsConfigPaths(),
     // Use src/server.ts (our SSR error wrapper) as the server entry.
     tanstackStart({ server: { entry: "server" } }),
-    nitro(),
+    nitro({
+      preset: "cloudflare_module",
+      compatibilityDate: "2025-09-01",
+      cloudflare: {
+        // Generates .output/server/wrangler.json so `wrangler deploy` needs no extra config.
+        deployConfig: true,
+        nodeCompat: true,
+        wrangler: { name: "manga-tome-tracker" },
+      },
+    }),
     viteReact(),
     tailwindcss(),
   ],

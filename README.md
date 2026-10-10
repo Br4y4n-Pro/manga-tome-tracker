@@ -32,6 +32,7 @@ Stack: TanStack Start (React 19) + Vite, Tailwind CSS, Supabase (auth y Postgres
 npm run dev      # servidor de desarrollo en http://localhost:8080
 npm run build    # build de producción
 npm run preview  # sirve el build
+npm run deploy   # build + publicar en Cloudflare Workers (requiere `npx wrangler login`)
 npm test         # tests
 npm run lint     # lint
 ```
